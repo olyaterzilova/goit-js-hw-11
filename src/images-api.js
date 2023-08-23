@@ -4,7 +4,7 @@ import axios from 'axios';
 async function fetchSearch(searchQuery = '', page = 1) {
   try {
     const response = await axios.get(
-      `https://pixabay.com/api/?key=39009543-2fb85b877c64322c9f1714413&per_page=40&page=${page}&q=${searchQuery}`
+      `https://pixabay.com/api/?key=39009543-2fb85b877c64322c9f1714413&per_page=40&orientation=horizontal&safesearch=true&image_type=photo&page=${page}&q=${searchQuery}`
     );
     return response.data;
   } catch (error) {
