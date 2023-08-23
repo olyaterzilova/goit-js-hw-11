@@ -13,6 +13,11 @@ function setVisible(el, type = 'hide') {
   }
 }
 
-console.log("fetchSearch();: ", fetchSearch('woman'););
-
-
+// Виконуємо запит і наповнюємо select опціями
+fetchSearch('woman')
+  .then(res => {
+    console.log(res);
+  })
+  .catch(error => {
+    console.error('Error fetching breeds:', error);
+  });

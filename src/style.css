@@ -2,18 +2,6 @@ body {
   font-family: Arial, sans-serif;
 }
 
-.cat-info {
-  display: flex;
-  gap: 30px;
-  margin-top: 50px;
-}
-.cat-info img {
-  max-width: 300px;
-}
-.error {
-  color: red;
-}
-
 .hide {
   display: none;
 }
