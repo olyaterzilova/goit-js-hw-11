@@ -2,13 +2,14 @@ body {
   font-family: Arial, sans-serif;
   background-color: #f0f0f0;
   color: #333;
+  padding-bottom: 50px !important;
 }
 
 .hide {
-  display: none;
+  display: none !important;
 }
 .show {
-  display: block;
+  display: flex !important;
 }
 
 /* Reset some default styles */
@@ -101,4 +102,29 @@ li {
 
 .info-item b {
   color: #007bff;
+}
+
+.button {
+  --bg: #5c62ec;
+  --color: #fff;
+  background-color: var(--bg);
+  color: var(--color);
+  min-height: 50px;
+  cursor: pointer;
+  border: none;
+  border-radius: 7px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 28px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: opacity 0.2s ease-in;
+  display: flex;
+  margin: 50px auto 0;
+  max-width: 100px;
+}
+
+.button:hover {
+  color: var(--color);
+  opacity: 0.8;
 }

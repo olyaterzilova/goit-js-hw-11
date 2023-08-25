@@ -6,54 +6,26 @@ import { fetchSearch } from './images-api.js';
 // Елементи для роботи скірпта
 const gallery = document.querySelector('#gallery');
 const searchForm = document.querySelector('#search-form');
+const btnLoadMore = document.querySelector('.js-load-more');
 let searchQuery = '';
 let currentPage = 1;
+let maxPage = 1;
 
-// Плавне прокручування до верху
-function smoothScrollToTop() {
-  const duration = 500;
-  const start = performance.now();
-  const from = window.scrollY;
-
-  function scroll(time) {
-    const elapsed = time - start;
-    const progress = Math.min(elapsed / duration, 1);
-    window.scrollTo(0, easeInOutCubic(progress, from, -from, 1));
-
-    if (progress < 1) {
-      requestAnimationFrame(scroll);
-    }
+// Pавантаження даних
+function setVisible(el, type = 'hide') {
+  if (type == 'hide') {
+    // el.style.display = 'none';
+    el.classList.add('hide');
+    el.classList.remove('show');
+  } else {
+    // el.style.display = 'block';
+    el.classList.add('show');
+    el.classList.remove('hide');
   }
-
-  function easeInOutCubic(t, b, c, d) {
-    t /= d / 2;
-    if (t < 1) return (c / 2) * t * t * t + b;
-    t -= 2;
-    return (c / 2) * (t * t * t + 2) + b;
-  }
-
-  requestAnimationFrame(scroll);
 }
 
-// Функція debounce для відкладеного виклику функції
-function waitEnd(func, delay) {
-  let timeout;
-  return function (...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      func.apply(this, args);
-    }, delay);
-  };
-}
-
-// Функція для перевірки, чи користувач дійшов до самого низу сторінки
-function isAtBottom() {
-  const windowHeight = window.innerHeight;
-  const bodyHeight = document.body.offsetHeight;
-  const scrollY = window.scrollY;
-
-  return scrollY + windowHeight >= bodyHeight;
-}
+// При завантаженні ховаємо кнопку load more
+setVisible(btnLoadMore, 'hide');
 
 // Використовуэмо бібліотеку галереї
 const galleryBox = new SimpleLightbox('.gallery a', {
@@ -91,7 +63,7 @@ function viewSearchItems(items, needFocus = false) {
     }
 
     gallery.insertAdjacentHTML(
-      'afterbegin',
+      'beforeend',
       `<div class="photo-card" id="${attrIdFocus}">
         <a href="${largeImageURL}" class="photo-card-img-holder">
           <img src="${webformatURL}" alt="${tags}" loading="lazy" />
@@ -117,21 +89,51 @@ function viewSearchItems(items, needFocus = false) {
 
   // Оновлювати бібліотеку
   galleryBox.refresh();
+
+  console.log('items.length: ', items.length);
+  // При завантаженні ховаємо кнопку load more
+  if (items.length >= 40) {
+    setVisible(btnLoadMore, 'show');
+  } else {
+    setVisible(btnLoadMore, 'hide');
+  }
 }
 
+// Запускаємо пошук по запиту
 searchForm.onsubmit = function (event) {
   event.preventDefault();
 
+  // Скасовуємо сторінки і починоємо з першої
+  currentPage = 1;
+
   // Отримуємо значення з поля пошуку
-  searchQuery = event.target[0].value;
+  searchQuery = event.target[0].value.trim();
 
   // Перевіряємо пошукове значення на пустоту
   if (searchQuery == '') {
-    gallery.innerHTML = 'Немає пошукової фрази';
+    // Оповіщуємо користувача
+    Notiflix.Notify.info('Немає пошукової фрази.');
   } else {
     // Виконуємо запит і наповнюємо select опціями
-    fetchSearch(searchQuery, currentPage)
+    fetchSearch(searchQuery, currentPage, maxPage)
       .then(res => {
+        // Якщо існує результат виконуємо код
+        if (res == false || res.totalHits == 0) {
+          Notiflix.Notify.info('По вашому запиту результатів не знайдено.');
+          gallery.innerHTML = '';
+          setVisible(btnLoadMore, 'hide');
+          return;
+        }
+
+        // Формуємо максимальну сторінку
+        maxPage = Math.floor(res.totalHits / 40);
+
+        // Перевіряємо чи значення не ноль
+        if (maxPage == 0) {
+          maxPage = 1;
+        }
+
+        // Якщо результат немає записів, зупиняємо код
         if (typeof res == 'undefined') {
           return;
         }
@@ -143,9 +145,6 @@ searchForm.onsubmit = function (event) {
         // Виводимо значення до галереї
         viewSearchItems(hits);
 
-        // Плавне прокручування до верху
-        smoothScrollToTop();
-
         // Збільшуємо поточну сторінку
         currentPage++;
       })
@@ -155,29 +154,30 @@ searchForm.onsubmit = function (event) {
   }
 };
 
-// Відстежування події скролу
-window.addEventListener(
-  'scroll',
-  waitEnd(() => {
-    if (isAtBottom()) {
-      // Виконуємо запит і наповнюємо select опціями
-      fetchSearch(searchQuery, currentPage)
-        .then(res => {
-          if (typeof res == 'undefined') {
-            return Notiflix.Notify.info('Ви дійшли до останньої сторінки.');
-          }
+// Виконуємо запит і наповнюємо select опціями
+btnLoadMore.onclick = () => {
+  fetchSearch(searchQuery, currentPage, maxPage)
+    .then(res => {
+      if (res == false) {
+        // Оповіщуємо користувача
+        Notiflix.Notify.info('Ви дійшли до останньої сторінки.');
 
-          const { hits } = res;
+        // Ховаємо кнопку load more
+        setVisible(btnLoadMore, 'hide');
 
-          // Виводимо значення до галереї
-          viewSearchItems(hits, true);
+        // Зупиняємо виконання коду
+        return false;
+      }
 
-          // Збільшуємо поточну сторінку
-          currentPage++;
-        })
-        .catch(error => {
-          console.error('Error fetching breeds:', error);
-        });
-    }
-  }, 300)
-);
+      const { hits } = res;
+
+      // Збільшуємо поточну сторінку
+      currentPage++;
+
+      // Виводимо значення до галереї
+      viewSearchItems(hits, true);
+    })
+    .catch(error => {
+      console.error('Error fetching breeds:', error);
+    });
+};
