@@ -30,6 +30,7 @@ setVisible(btnLoadMore, 'hide');
 // Використовуэмо бібліотеку галереї
 const galleryBox = new SimpleLightbox('.gallery a', {
   sourceAttr: 'href',
+  captionData: 'alt',
 });
 
 // Вивід результатів пошуку
@@ -90,7 +91,6 @@ function viewSearchItems(items, needFocus = false) {
   // Оновлювати бібліотеку
   galleryBox.refresh();
 
-  console.log('items.length: ', items.length);
   // При завантаженні ховаємо кнопку load more
   if (items.length >= 40) {
     setVisible(btnLoadMore, 'show');
@@ -126,7 +126,7 @@ searchForm.onsubmit = function (event) {
         }
 
         // Формуємо максимальну сторінку
-        maxPage = Math.floor(res.totalHits / 40);
+        maxPage = Math.ceil(res.totalHits / 40);
 
         // Перевіряємо чи значення не ноль
         if (maxPage == 0) {

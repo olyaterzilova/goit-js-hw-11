@@ -2,7 +2,6 @@ import axios from 'axios';
 
 // Функція для виконання HTTP GET-запиту
 async function fetchSearch(searchQuery = '', page = 1, maxPage) {
-  console.log(page);
   try {
     // Якщо сторінка досягла максимального значення, запит виконувати не потрібно
     if (page > maxPage) {
